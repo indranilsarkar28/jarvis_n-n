@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Jarvis AI Assistant</title>
+</head>
+<body style="background:#111;color:white;font-family:sans-serif;text-align:center;padding:40px;">
+  <h1>🎙️ Jarvis AI</h1>
+  <button id="speakBtn">🎤 Speak</button>
+  <p id="response"></p>
+
+<script>
+const speakBtn = document.getElementById("speakBtn");
+const responseBox = document.getElementById("response");
+
+function speak(text){
+    const utter = new SpeechSynthesisUtterance(text);
+    speechSynthesis.speak(utter);
+}
+
+speakBtn.addEventListener("click", () => {
+    const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+    recognition.lang = "en-IN";
+    recognition.start();
+
+    recognition.onresult = async (event) => {
+        const command = event.results[0][0].transcript;
+        responseBox.innerText = "You: " + command;
+
+        let res = await fetch("/ask", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({query: command})
+        });
+
+        let data = await res.json();
+        responseBox.innerText += "\nJarvis: " + data.reply;
+        speak(data.reply);
+
+        if(data.url){
+            window.open(data.url, "_blank");
+        }
+    };
+});
+</script>
+</body>
+</html>
